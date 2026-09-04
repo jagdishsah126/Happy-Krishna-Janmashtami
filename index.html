@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Janmashtami • The Bhagavad Gita Meditative Sanctuary</title>
+  <meta name="description" content="A quiet sanctuary to drop your shoulders, breathe deeply, and find timeless peace through the Bhagavad Gita on Krishna Janmashtami." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=Great+Vibes&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Yatra+One&display=swap" rel="stylesheet" />
+
+  <!-- Shared Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+  <!-- Persistent Fullscreen Night Sky Canvas (Never resets across chapters) -->
+  <canvas id="night-sky-canvas"></canvas>
+  <div class="ambient-radial-glow"></div>
+
+  <!-- Sanctuary Main Container -->
+  <main class="sanctuary-container">
+
+    <!-- Top Persistent Navigation Header -->
+    <header class="top-nav-bar">
+      <a href="#home" class="nav-home-link" onclick="navigateTo('home'); return false;">
+        <span>🪶</span>
+        <span>Janmashtami Sanctuary</span>
+      </a>
+      <div class="nav-chapter-indicator" id="nav-chapter-indicator">Home Entrance</div>
+      <div class="nav-progress-dots" id="nav-progress-dots">
+        <a href="#home" class="progress-dot active" title="Home" onclick="navigateTo('home'); return false;"></a>
+        <a href="#chapter1" class="progress-dot" title="Chapter 1" onclick="navigateTo('chapter1'); return false;"></a>
+        <a href="#chapter2" class="progress-dot" title="Chapter 2" onclick="navigateTo('chapter2'); return false;"></a>
+        <a href="#chapter3" class="progress-dot" title="Chapter 3" onclick="navigateTo('chapter3'); return false;"></a>
+        <a href="#chapter4" class="progress-dot" title="Chapter 4" onclick="navigateTo('chapter4'); return false;"></a>
+        <a href="#chapter5" class="progress-dot" title="Chapter 5" onclick="navigateTo('chapter5'); return false;"></a>
+        <a href="#final" class="progress-dot" title="Final Diya Release" onclick="navigateTo('final'); return false;"></a>
+      </div>
+    </header>
+
+    <!-- Dynamic Viewport Area (Seamlessly transitions without stopping audio) -->
+    <div id="sanctuary-viewport" style="width: 100%; display: flex; flex-direction: column; align-items: center; transition: opacity 0.3s ease, transform 0.3s ease;">
+      <!-- Content populated dynamically based on current route/chapter -->
+    </div>
+
+    <!-- Footer Blessing -->
+    <footer class="site-footer">
+      <div id="footer-sanskrit" class="footer-sanskrit">॥ ॐ शान्तिः शान्तिः शान्तिः ॥</div>
+      <p id="footer-blessing" class="footer-blessing">
+        May the divine wisdom of Shri Krishna illuminate your mind with quiet clarity and deep serenity.
+      </p>
+      <div id="footer-subtext" class="footer-subtext">
+        Crafted with reverence • Wishing you a peaceful Janmashtami
+      </div>
+      <div class="footer-prompt">
+        ✨ Click or tap anywhere in the sky to release a glowing Diya
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- Persistent Floating Soundscape Widget (Continuous Uninterrupted Audio) -->
+  <aside class="sound-widget" id="sound-widget">
+    <button class="sound-btn" id="sound-toggle-btn" aria-label="Toggle Meditative Ambient Sound" title="Toggle Meditative Audio">
+      <span id="sound-icon">▶</span>
+    </button>
+    <div class="sound-bars" id="sound-bars">
+      <span class="sound-bar"></span>
+      <span class="sound-bar"></span>
+      <span class="sound-bar"></span>
+    </div>
+    <select class="sound-mode-select" id="sound-mode-select" title="Choose Meditative Soundscape">
+      <option value="audio-file" selected>🎵 Krishna Bhajan & Flute</option>
+      <option value="flute">🪈 Meditative Flute Synth</option>
+      <option value="om">🕉️ Cosmic Om (432Hz)</option>
+      <option value="rain">🌧️ Night Rain & Silence</option>
+    </select>
+  </aside>
+
+  <!-- Load all separate chapter data stores -->
+  <script src="data/home.js"></script>
+  <script src="data/chapter1.js"></script>
+  <script src="data/chapter2.js"></script>
+  <script src="data/chapter3.js"></script>
+  <script src="data/chapter4.js"></script>
+  <script src="data/chapter5.js"></script>
+  <script src="data/final.js"></script>
+
+  <!-- Shared Audio & Sky Engine -->
+  <script src="assets/js/sky-canvas.js"></script>
+  <script src="assets/js/audio.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const viewport = document.getElementById('sanctuary-viewport');
+      const navIndicator = document.getElementById('nav-chapter-indicator');
+      const dots = document.querySelectorAll('.progress-dot');
+
+      const routes = {
+        home: renderHomeView,
+        chapter1: () => renderChapterView(window.CHAPTER1_DATA, 1),
+        chapter2: () => renderChapterView(window.CHAPTER2_DATA, 2),
+        chapter3: () => renderChapterView(window.CHAPTER3_DATA, 3),
+        chapter4: () => renderChapterView(window.CHAPTER4_DATA, 4),
+        chapter5: () => renderChapterView(window.CHAPTER5_DATA, 5),
+        final: renderFinalView
+      };
+
+      const dotIndices = {
+        home: 0,
+        chapter1: 1,
+        chapter2: 2,
+        chapter3: 3,
+        chapter4: 4,
+        chapter5: 5,
+        final: 6
+      };
+
+      function updateNavDots(currentKey) {
+        const activeIdx = dotIndices[currentKey] !== undefined ? dotIndices[currentKey] : 0;
+        dots.forEach((dot, idx) => {
+          dot.classList.remove('active', 'completed');
+          if (idx === activeIdx) {
+            dot.classList.add('active');
+          } else if (idx < activeIdx) {
+            dot.classList.add('completed');
+          }
+        });
+      }
+
+      window.navigateTo = function (pageKey) {
+        if (!routes[pageKey]) pageKey = 'home';
+
+        // Update URL hash without reload
+        if (window.location.hash !== `#${pageKey}`) {
+          window.location.hash = `#${pageKey}`;
+        }
+
+        // Smooth transition
+        viewport.style.opacity = '0';
+        viewport.style.transform = 'translateY(12px)';
+
+        setTimeout(() => {
+          routes[pageKey]();
+          updateNavDots(pageKey);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+
+          viewport.style.opacity = '1';
+          viewport.style.transform = 'translateY(0)';
+        }, 200);
+      };
+
+      // -----------------------------------------------------------------------
+      // VIEW RENDERERS
+      // -----------------------------------------------------------------------
+
+      // 1. HOME VIEW
+      function renderHomeView() {
+        const data = window.HOME_DATA || {};
+        navIndicator.textContent = "Home Entrance";
+
+        let chapterCardsHtml = '';
+        if (Array.isArray(data.chapterCards)) {
+          chapterCardsHtml = data.chapterCards.map(c => `
+            <a href="${c.link}" onclick="navigateTo('${c.link.replace('#','')}'); return false;" class="home-chapter-card" style="
+              display: flex;
+              align-items: flex-start;
+              gap: 0.85rem;
+              background: rgba(14, 21, 36, 0.65);
+              border: 1px solid rgba(56, 189, 248, 0.18);
+              padding: 1.1rem 1.25rem;
+              border-radius: 16px;
+              text-decoration: none;
+              color: inherit;
+              transition: all 0.25s ease;
+            ">
+              <span style="font-size: 1.5rem;">${c.icon}</span>
+              <div>
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--gold-warm); font-weight: 600; letter-spacing: 0.1em;">
+                  ${c.num === '✨' ? 'Final Sanctuary' : 'Gateway ' + c.num}
+                </div>
+                <div style="font-family: var(--font-display); font-size: 1.05rem; color: #ffffff; margin: 0.2rem 0;">
+                  ${c.title}
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4;">
+                  ${c.subtitle}
+                </div>
+              </div>
+            </a>
+          `).join('');
+        }
+
+        viewport.innerHTML = `
+          <!-- Divine Hero Header -->
+          <section class="hero-header">
+            <div class="sanskrit-invocation">${data.header?.sanskritGreeting || '॥ ॐ श्री कृष्णाय नमः ॥'}</div>
+
+            <svg class="divine-emblem" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="38" r="24" fill="url(#featherGlowHome)" />
+              <ellipse cx="50" cy="38" rx="16" ry="20" fill="none" stroke="#38bdf8" stroke-width="2.2" />
+              <ellipse cx="50" cy="40" rx="10" ry="13" fill="none" stroke="#fbbf24" stroke-width="2.5" />
+              <circle cx="50" cy="42" r="6" fill="#0284c7" />
+              <circle cx="50" cy="41" r="3" fill="#38bdf8" />
+              <path d="M50 58 Q 50 78 44 92" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+              <path d="M22 68 L78 68" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+              <circle cx="34" cy="68" r="1.5" fill="#050505" />
+              <circle cx="44" cy="68" r="1.5" fill="#050505" />
+              <circle cx="54" cy="68" r="1.5" fill="#050505" />
+              <circle cx="64" cy="68" r="1.5" fill="#050505" />
+              <defs>
+                <radialGradient id="featherGlowHome" cx="0.5" cy="0.5" r="0.5">
+                  <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.45" />
+                  <stop offset="60%" stop-color="#fbbf24" stop-opacity="0.2" />
+                  <stop offset="100%" stop-color="#050505" stop-opacity="0" />
+                </radialGradient>
+              </defs>
+            </svg>
+
+            <h1 class="main-title">${data.header?.title || 'Happy Janmashtami'}</h1>
+            <p class="hero-subtitle">${data.header?.subtitle || ''}</p>
+          </section>
+
+          <!-- Guided Breathing Pacer -->
+          <section class="breathing-section">
+            <div class="breath-circle-container" id="breath-circle-btn" title="Click to sync breath">
+              <div class="breath-ring-outer"></div>
+              <div class="breath-circle-glow" id="breath-circle-glow">
+                <span class="breath-center-icon">🕊️</span>
+              </div>
+            </div>
+            <div class="breath-status-text" id="breath-status-text">Breathe In Peace...</div>
+            <div class="breath-hint-text">${data.breathingGuide?.hint || 'Sync your breath with the glowing rhythm'}</div>
+          </section>
+
+          <!-- The Calm Entrance Card -->
+          <article class="sanctuary-card">
+            <div class="card-top-tag">${data.calmEntrance?.tag || 'The Calm Entrance'}</div>
+            <h2 class="card-title">${data.calmEntrance?.title || 'Welcome. Breathe.'}</h2>
+            <div class="verse-quote-box" style="margin-bottom: 1.5rem;">
+              “${data.calmEntrance?.openingThought || 'You are here because the noise of life has become too loud.'}”
+            </div>
+            <div class="meaning-paragraphs" style="margin-bottom: 2.25rem;">
+              ${Array.isArray(data.calmEntrance?.coreNarrative) ? data.calmEntrance.coreNarrative.map(p => `<p>${p}</p>`).join('') : ''}
+            </div>
+
+            <!-- Primary Action: Begin Chapter 1 -->
+            <div style="text-align: center; margin-bottom: 2.5rem;">
+              <a href="#chapter1" onclick="navigateTo('chapter1'); return false;" class="stepper-btn next" style="font-size: 1.05rem; padding: 1rem 2.2rem; cursor: pointer;">
+                <span>Begin Chapter 1: The Overwhelm</span>
+                <span>→</span>
+              </a>
+            </div>
+
+            <!-- Gateways Grid -->
+            <h3 style="font-family: var(--font-serif); font-size: 1.25rem; color: var(--gold-warm); margin-bottom: 1.25rem; text-align: center;">
+              The 5 Sacred Gateways of Peace
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+              ${chapterCardsHtml}
+            </div>
+          </article>
+        `;
+
+        initBreathingPacer(data.breathingGuide?.phases);
+      }
+
+      // 2. CHAPTER VIEW (Chapters 1 to 5)
+      function renderChapterView(data, chapterNum) {
+        if (!data) return;
+        navIndicator.textContent = `Chapter ${chapterNum} of 5`;
+
+        const prevKey = data.prevLink ? data.prevLink.replace('#', '') : 'home';
+        const nextKey = data.nextLink ? data.nextLink.replace('#', '') : (chapterNum === 5 ? 'final' : `chapter${chapterNum + 1}`);
+
+        const takeawaysHtml = Array.isArray(data.practicalTakeaway?.points)
+          ? data.practicalTakeaway.points.map(pt => `
+              <li class="takeaway-item">
+                <span class="takeaway-bullet">✦</span>
+                <span>${pt}</span>
+              </li>
+            `).join('')
+          : '';
+
+        const paragraphsHtml = Array.isArray(data.meaningForYou?.paragraphs)
+          ? data.meaningForYou.paragraphs.map(p => `<p>${p}</p>`).join('')
+          : '';
+
+        viewport.innerHTML = `
+          <!-- Divine Header -->
+          <section class="hero-header">
+            <div class="sanskrit-invocation">${data.header?.sanskritGreeting || '॥ ॐ श्री कृष्णाय नमः ॥'}</div>
+            <div class="card-top-tag">${data.header?.tag || `Section ${chapterNum}`}</div>
+            <h1 class="main-title">${data.header?.title || ''}</h1>
+            <p class="hero-subtitle">${data.header?.subtitle || ''}</p>
+          </section>
+
+          <!-- Sanctuary Wisdom Card -->
+          <article class="sanctuary-card">
+            
+            <!-- Sanskrit Shloka Box -->
+            <div class="shloka-box">
+              <div class="shloka-text">${data.sanskritBlock?.quote || ''}</div>
+              <div class="shloka-ref">— ${data.sanskritBlock?.reference || ''}</div>
+              <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 0.4rem; font-style: italic;">
+                ${data.sanskritBlock?.transliteration || ''}
+              </div>
+            </div>
+
+            <!-- Verse Quote -->
+            <div class="verse-quote-box">${data.verse?.highlightText || ''}</div>
+
+            <!-- Meaning for You -->
+            <div class="meaning-section">
+              <div class="meaning-heading">${data.meaningForYou?.heading || 'The Meaning for You:'}</div>
+              <div class="meaning-paragraphs">${paragraphsHtml}</div>
+            </div>
+
+            <!-- Practical Takeaway -->
+            <div class="takeaway-box">
+              <div class="takeaway-title">
+                <span>🪔</span>
+                <span>${data.practicalTakeaway?.heading || 'What this means for you tonight:'}</span>
+              </div>
+              <ul class="takeaway-list">${takeawaysHtml}</ul>
+            </div>
+
+            <!-- Mantra Bottom Bar -->
+            <div class="card-bottom-bar">
+              <div class="mantra-badge">
+                <span>🕊️</span>
+                <span>Mantra: “${data.mantra || ''}”</span>
+              </div>
+              <button class="action-btn-pill" onclick="copyChapterWisdom('${data.header?.title || ''}', '${data.sanskritBlock?.reference || ''}', '${data.mantra || ''}')" title="Save wisdom to clipboard">
+                <span>📋</span>
+                <span>Save Wisdom</span>
+              </button>
+            </div>
+
+          </article>
+
+          <!-- Chapter Stepper Navigation -->
+          <nav class="chapter-stepper-nav">
+            <a href="#${prevKey}" onclick="navigateTo('${prevKey}'); return false;" class="stepper-btn prev">
+              ${data.prevText || '← Previous'}
+            </a>
+            <a href="#${nextKey}" onclick="navigateTo('${nextKey}'); return false;" class="stepper-btn ${chapterNum === 5 ? 'final-glow' : 'next'}">
+              ${data.nextText || 'Next Chapter →'}
+            </a>
+          </nav>
+        `;
+      }
+
+      // 3. FINAL SANCTUARY VIEW
+      function renderFinalView() {
+        const data = window.FINAL_DATA || {};
+        navIndicator.textContent = "Final Sanctuary";
+
+        const presetsHtml = Array.isArray(data.ritual?.presetWorries)
+          ? data.ritual.presetWorries.map(txt => `
+              <button type="button" class="preset-chip" onclick="document.getElementById('final-worry-input').value='${txt}'; document.getElementById('final-worry-input').focus();">
+                ${txt}
+              </button>
+            `).join('')
+          : '';
+
+        const summaryHtml = Array.isArray(data.journeySummary)
+          ? data.journeySummary.map(item => `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.95rem; background: rgba(14, 21, 36, 0.55); border-radius: 10px; font-size: 0.9rem;">
+                <div>
+                  <span style="color: var(--blue-electric); font-weight: 600;">${item.chapter}:</span>
+                  <span style="color: #ffffff; margin-left: 0.4rem;">${item.title}</span>
+                </div>
+                <div style="color: var(--gold-warm); font-style: italic; font-size: 0.82rem;">
+                  “${item.mantra}”
+                </div>
+              </div>
+            `).join('')
+          : '';
+
+        viewport.innerHTML = `
+          <!-- Divine Header -->
+          <section class="hero-header">
+            <div class="sanskrit-invocation">${data.header?.sanskritGreeting || '॥ ॐ नमो भगवते वासुदेवाय ॥'}</div>
+            <div class="card-top-tag" style="border-color: var(--border-gold); color: var(--gold-warm); background: rgba(245, 158, 11, 0.1);">
+              ${data.header?.tag || 'The Sanctuary of Surrender'}
+            </div>
+            <h1 class="main-title">${data.header?.title || 'The Ultimate Diya Release'}</h1>
+            <p class="hero-subtitle">${data.header?.subtitle || ''}</p>
+          </section>
+
+          <!-- Interactive Ritual Card -->
+          <article class="sanctuary-card ritual-card">
+            <div style="font-size: 2.6rem; margin-bottom: 0.5rem; animation: floatSlow 4s ease-in-out infinite;">🪔</div>
+            <h2 class="card-title" style="color: #ffffff;">${data.ritual?.title || 'Light Your Diya of Surrender'}</h2>
+            <p class="card-subtitle" style="max-width: 600px; margin: 0 auto 1.5rem; color: #cbd5e1;">
+              ${data.ritual?.prompt || ''}
+            </p>
+
+            <form class="ritual-form" id="final-ritual-form" onsubmit="handleFinalRitual(event)">
+              <input 
+                type="text" 
+                id="final-worry-input" 
+                class="ritual-input" 
+                placeholder="${data.ritual?.inputPlaceholder || 'Type your worry here...'}" 
+                autocomplete="off" 
+                maxlength="120"
+              />
+              <button type="submit" class="ritual-submit-btn">
+                ${data.ritual?.buttonText || 'Release into the Sky 🪔'}
+              </button>
+            </form>
+
+            <div class="preset-worries-grid">${presetsHtml}</div>
+
+            <div style="margin-top: 1.75rem; font-size: 0.85rem; color: var(--gold-warm); letter-spacing: 0.05em;">
+              ✨ <span id="diya-count-display">108</span> Diyas currently glowing in the celestial sky
+            </div>
+          </article>
+
+          <!-- Closing Reflection Card -->
+          <article class="sanctuary-card">
+            <div class="card-top-tag">Timeless Solace • BG 6.40</div>
+            <h2 class="card-title">${data.closingReflection?.heading || 'The Eternal Assurance'}</h2>
+
+            <div class="shloka-box">
+              <div class="shloka-text">${data.closingReflection?.sanskritQuote || ''}</div>
+              <div class="shloka-ref">— ${data.closingReflection?.sanskritRef || ''}</div>
+            </div>
+
+            <div class="verse-quote-box">${data.closingReflection?.translation || ''}</div>
+
+            <div class="meaning-paragraphs" style="margin-bottom: 2rem;">
+              <p>${data.closingReflection?.reflectionText || ''}</p>
+            </div>
+
+            <div class="takeaway-box">
+              <div class="takeaway-title">
+                <span>🕊️</span>
+                <span>Your Complete 5-Gateway Journey:</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                ${summaryHtml}
+              </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 1.5rem;">
+              <a href="#home" onclick="navigateTo('home'); return false;" class="stepper-btn prev" style="margin-right: 0.5rem; cursor: pointer;">
+                ← Return to Home Sanctuary
+              </a>
+              <a href="#chapter1" onclick="navigateTo('chapter1'); return false;" class="action-btn-pill" style="padding: 0.75rem 1.4rem; font-size: 0.9rem; cursor: pointer;">
+                Re-experience Chapters
+              </a>
+            </div>
+          </article>
+        `;
+      }
+
+      // Breathing Pacer Engine
+      function initBreathingPacer(phases) {
+        const glow = document.getElementById('breath-circle-glow');
+        const text = document.getElementById('breath-status-text');
+        const btn = document.getElementById('breath-circle-btn');
+        if (!glow || !text) return;
+
+        const defaultPhases = [
+          { text: "Breathe In Peace...", duration: 4000, class: "inhale" },
+          { text: "Hold Gently...", duration: 4000, class: "hold" },
+          { text: "Exhale All Worry...", duration: 4000, class: "exhale" },
+          { text: "Rest in Stillness...", duration: 4000, class: "rest" }
+        ];
+
+        const activePhases = Array.isArray(phases) && phases.length > 0 ? phases : defaultPhases;
+        let pIdx = 0;
+
+        function run() {
+          if (!document.getElementById('breath-circle-glow')) return;
+          const cur = activePhases[pIdx];
+          glow.className = `breath-circle-glow ${cur.class}`;
+          text.style.opacity = '0';
+          setTimeout(() => {
+            if (document.getElementById('breath-status-text')) {
+              text.textContent = cur.text;
+              text.style.opacity = '1';
+            }
+          }, 250);
+          pIdx = (pIdx + 1) % activePhases.length;
+          setTimeout(run, cur.duration || 4000);
+        }
+
+        run();
+
+        if (btn) {
+          btn.addEventListener('click', () => {
+            if (window.spawnSanctuaryDiya) {
+              window.spawnSanctuaryDiya(btn.getBoundingClientRect().left + 75, btn.getBoundingClientRect().top + 75);
+            }
+            if (window.showSanctuaryToast) {
+              window.showSanctuaryToast("🕊️ Breathing deep and centered...");
+            }
+          });
+        }
+      }
+
+      // Final Ritual Submit Handler
+      let diyaCounter = 108;
+      window.handleFinalRitual = function (e) {
+        e.preventDefault();
+        const input = document.getElementById('final-worry-input');
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
+
+        const centerX = window.innerWidth / 2;
+        const bottomY = window.innerHeight - 80;
+
+        if (window.spawnSanctuaryDiya) {
+          // Launch the main dedicated Diya with the user's exact written text!
+          window.spawnSanctuaryDiya(centerX, bottomY, text);
+          for (let i = 0; i < 3; i++) {
+            setTimeout(() => {
+              window.spawnSanctuaryDiya(centerX + (Math.random() - 0.5) * 160, bottomY + Math.random() * 30 + 20, "✨ Surrendered");
+            }, (i + 1) * 250);
+          }
+        }
+
+        diyaCounter += 1;
+        const countDisplay = document.getElementById('diya-count-display');
+        if (countDisplay) countDisplay.textContent = diyaCounter;
+
+        input.value = '';
+        const toastMsg = window.FINAL_DATA?.ritual?.successToast || "🪔 Your prayer has dissolved into rising light.";
+        if (window.showSanctuaryToast) window.showSanctuaryToast(toastMsg);
+      };
+
+      // Copy Wisdom Helper
+      window.copyChapterWisdom = function (title, ref, mantra) {
+        const textToCopy = `${title} (${ref})\n\nMantra: “${mantra}”\n\n— The Bhagavad Gita Meditative Sanctuary`;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          if (window.showSanctuaryToast) window.showSanctuaryToast("✨ Saved reflection to clipboard!");
+        }).catch(() => {
+          if (window.showSanctuaryToast) window.showSanctuaryToast("✨ Reflection noted in your heart.");
+        });
+      };
+
+      // URL Hash Router Hook
+      function handleHashChange() {
+        const hash = window.location.hash.replace('#', '') || 'home';
+        navigateTo(hash);
+      }
+
+      window.addEventListener('hashchange', handleHashChange);
+      window.addEventListener('DOMContentLoaded', () => {
+        const initialPage = window.location.hash.replace('#', '') || 'home';
+        navigateTo(initialPage);
+      });
+
+    })();
+  </script>
+</body>
+</html>
