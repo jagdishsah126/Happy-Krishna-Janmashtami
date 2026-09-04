@@ -1,7 +1,8 @@
 /**
  * 🎵 THE MEDITATIVE SOUNDSCAPE ENGINE (STREAMING & AUTOPLAY ENHANCED)
- * Efficient chunked progressive streaming of Krishna.mp3 & Web Audio synthesizers (Flute, Om 432Hz, Night Rain).
- * Handles browser autoplay policies with seamless first-interaction auto-start and volume fade-in.
+ * Efficient chunked progressive streaming of Krishna.mp3, Om.mp3, Night.mp3
+ * & Web Audio synthesizer (Flute fallback). Handles browser autoplay policies
+ * with seamless first-interaction auto-start and volume fade-in.
  */
 
 (function () {
@@ -12,20 +13,43 @@
   let currentMode = "audio-file"; // default to Krishna.mp3
   let activeNodes = [];
   let masterGain = null;
-  let audioElement = null;
+  let audioElement = null;      // Krishna.mp3
+  let omAudioElement = null;    // Om.mp3
+  let rainAudioElement = null;  // Night.mp3
   let autoplayUnlocked = false;
 
   // 1. MEMORY-EFFICIENT PROGRESSIVE STREAMING INITIALIZATION
   function initAudioElement() {
     if (!audioElement) {
       audioElement = new Audio();
-      // 'metadata' ensures only audio headers are buffered initially (saves RAM and bandwidth)
       audioElement.preload = 'metadata';
       audioElement.src = 'Krishna.mp3';
       audioElement.loop = true;
       audioElement.volume = 0.45;
     }
     return audioElement;
+  }
+
+  function initOmElement() {
+    if (!omAudioElement) {
+      omAudioElement = new Audio();
+      omAudioElement.preload = 'metadata';
+      omAudioElement.src = 'Om.mp3';
+      omAudioElement.loop = true;
+      omAudioElement.volume = 0.45;
+    }
+    return omAudioElement;
+  }
+
+  function initRainElement() {
+    if (!rainAudioElement) {
+      rainAudioElement = new Audio();
+      rainAudioElement.preload = 'metadata';
+      rainAudioElement.src = 'Night.mp3';
+      rainAudioElement.loop = true;
+      rainAudioElement.volume = 0.45;
+    }
+    return rainAudioElement;
   }
 
   function getAudioContext() {
@@ -40,9 +64,9 @@
   }
 
   function stopActiveSound() {
-    if (audioElement) {
-      audioElement.pause();
-    }
+    if (audioElement) audioElement.pause();
+    if (omAudioElement) omAudioElement.pause();
+    if (rainAudioElement) rainAudioElement.pause();
 
     if (masterGain && audioCtx) {
       masterGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
@@ -66,12 +90,36 @@
         updateWidgetUI(true);
       }).catch((err) => {
         console.log("Autoplay waiting for initial user interaction:", err);
-        // Fallback to flute synth if audio file fails
         startSynth('flute');
       });
       return;
     }
 
+    if (mode === 'om') {
+      const omAudio = initOmElement();
+      omAudio.play().then(() => {
+        isPlaying = true;
+        updateWidgetUI(true);
+      }).catch(() => {
+        // Fallback to procedural Om synth if file fails
+        startSynth('om');
+      });
+      return;
+    }
+
+    if (mode === 'rain') {
+      const rainAudio = initRainElement();
+      rainAudio.play().then(() => {
+        isPlaying = true;
+        updateWidgetUI(true);
+      }).catch(() => {
+        // Fallback to procedural rain synth if file fails
+        startSynth('rain');
+      });
+      return;
+    }
+
+    // 'flute' mode — always procedural
     startSynth(mode);
   }
 
