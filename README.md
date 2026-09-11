@@ -1,10 +1,17 @@
 # 🪔 Happy Krishna Janmashtami • The Bhagavad Gita Meditative Sanctuary
 
 <p align="center">
+  <a href="https://janmashtami.jagdishsah.com.np/" target="_blank">
+    <img src="https://img.shields.io/badge/Live%20Sanctuary-janmashtami.jagdishsah.com.np-f59e0b?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Live Sanctuary Badge" />
+  </a>
   <img src="https://img.shields.io/badge/Theme-Pitch--Black%20Celestial%20Sanctuary-050505?style=for-the-badge&logo=graphql&logoColor=38bdf8" alt="Theme Badge" />
   <img src="https://img.shields.io/badge/Audio-Web%20Audio%20%26%20Streaming-f59e0b?style=for-the-badge&logo=safari&logoColor=white" alt="Audio Badge" />
   <img src="https://img.shields.io/badge/Animations-60fps%20HTML5%20Canvas-38bdf8?style=for-the-badge&logo=html5&logoColor=white" alt="Canvas Badge" />
   <img src="https://img.shields.io/badge/Wisdom-Bhagavad%20Gita%205%20Gateways-fbbf24?style=for-the-badge" alt="Wisdom Badge" />
+</p>
+
+<p align="center">
+  🪔 <b>Experience the Live Sanctuary:</b> <a href="https://janmashtami.jagdishsah.com.np/">https://janmashtami.jagdishsah.com.np/</a> 🪔
 </p>
 
 ---
@@ -99,8 +106,13 @@ To edit or add new reflections:
 
 ---
 
-## 🚀 How to Run
+## 🚀 How to Run & Experience
 
+### 🌐 Live Sanctuary
+Visit the live interactive sanctuary online:  
+👉 **[https://janmashtami.jagdishsah.com.np/](https://janmashtami.jagdishsah.com.np/)**
+
+### 💻 Local Run
 1. Clone or download the repository:
    ```bash
    git clone https://github.com/jagdishsah126/Happy-Krishna-Janmashtami.git
